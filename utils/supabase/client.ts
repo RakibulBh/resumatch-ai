@@ -1,4 +1,6 @@
+"use client";
 import { createClient } from "@supabase/supabase-js";
+import { useRef, useState } from "react";
 
 // Add clerk to Window to avoid type errors
 declare global {
