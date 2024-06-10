@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { CookieOptions, createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-async function createClerkSupabaseClient() {
+export async function createClerkSupabaseClient() {
   const cookieStore = cookies();
   const { getToken } = auth();
 

@@ -27,7 +27,6 @@ const Navbar = () => {
         </ul>
       </nav>
       <Button>Tailor my resume</Button>
-      <SignOutButton />
     </div>
   );
 };

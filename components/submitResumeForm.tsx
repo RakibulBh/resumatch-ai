@@ -16,14 +16,21 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { getResumeTailor } from "@/app/(root)/dashboard/actions";
+import { useState } from "react";
+import { LoaderCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useToast } from "./ui/use-toast";
 
 const formSchema = z.object({
-  resumeText: z.string().min(1),
+  resumeText: z.string().min(1).max(5000),
   jobDescription: z.string().min(1),
 });
 
 export function SubmitResumeForm() {
-  // 1. Define your form.
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const [loading, setLoading] = useState<boolean>(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -32,9 +39,21 @@ export function SubmitResumeForm() {
     },
   });
 
-  // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    getResumeTailor(values.resumeText, values.jobDescription);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setLoading(true);
+    const tailorId = await getResumeTailor(
+      values.resumeText,
+      values.jobDescription
+    );
+    setLoading(false);
+    if (tailorId !== null) {
+      router.push(`/scan/${tailorId}`);
+    } else {
+      toast({
+        title: "Resume or Job Description is invalud",
+        variant: "destructive",
+      });
+    }
   }
 
   return (
@@ -94,8 +113,18 @@ export function SubmitResumeForm() {
           </div>
         </div>
         <div className="flex gap-x-6 justify-end">
-          <Button variant="outline">Cancel</Button>
-          <Button type="submit">Scan</Button>
+          <Button disabled={loading} variant="outline">
+            Cancel
+          </Button>
+          <Button disabled={loading} type="submit">
+            {loading ? (
+              <>
+                <LoaderCircle className="mr-3" /> Scanning{" "}
+              </>
+            ) : (
+              "Scan"
+            )}
+          </Button>
         </div>
       </form>
     </Form>
