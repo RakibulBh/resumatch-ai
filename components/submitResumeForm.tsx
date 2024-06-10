@@ -15,6 +15,7 @@ import {
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
+import { getResumeTailor } from "@/app/(root)/dashboard/actions";
 
 const formSchema = z.object({
   resumeText: z.string().min(1),
@@ -33,12 +34,8 @@ export function SubmitResumeForm() {
 
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+    getResumeTailor(values.resumeText, values.jobDescription);
   }
-
-  // TODO: CONSOLE.LOG VALUES WHEN SUBMITTED FROM FORM
 
   return (
     <Form {...form}>
@@ -73,7 +70,6 @@ export function SubmitResumeForm() {
                       type="file"
                     />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
