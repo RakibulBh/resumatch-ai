@@ -4,12 +4,35 @@ import { Check } from "lucide-react";
 import React from "react";
 import { findScanById } from "../actions";
 import { redirect } from "next/navigation";
+import puppeteer from "puppeteer";
 
 const ScanDetails = async ({ params }: { params: { scanId: string } }) => {
   const scan = await findScanById(params.scanId);
   if (scan.length === 0) {
     redirect("/dashboard");
   }
+
+  const generatePDF = async ({ htmlContent }: { htmlContent: string }) => {
+    const browser = await puppeteer.launch();
+
+    const page = await browser.newPage();
+
+    await page.setContent(htmlContent, { waitUntil: "domcontentloaded" });
+
+    await page.emulateMediaType("screen");
+
+    const pdfBuffer = await page.pdf({
+      margin: { top: 0, right: 0, bottom: 0, left: 0 }, // Set all margins to 0
+      printBackground: true,
+      format: "A4",
+    });
+
+    await browser.close();
+
+    return pdfBuffer;
+  };
+
+  generatePDF({ htmlContent: scan[0].ai_output });
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -25,10 +48,13 @@ const ScanDetails = async ({ params }: { params: { scanId: string } }) => {
                 Your resume is <br /> now tailored.
               </h1>
             </div>
-            <Button>Download Resume</Button>
+            <Button>Download Resume</Button>;
           </div>
-          <div className="w-[70%] h-[40rem] rounded-xl border-2 border-gray-700 bg-white">
-            <p>{scan[0].ai_output}</p>
+          <div
+            id="resume-content"
+            className="w-[70%] h-[40rem] rounded-xl border-2 border-gray-700 bg-white overflow-y-auto"
+          >
+            <p dangerouslySetInnerHTML={{ __html: scan[0].ai_output }}></p>
           </div>
         </div>
       </div>

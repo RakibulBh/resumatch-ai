@@ -1,3 +1,4 @@
+"use server";
 import { createClerkSupabaseClient } from "@/utils/supabase/server";
 
 export const findScanById = async (id: string) => {
