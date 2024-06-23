@@ -37,13 +37,9 @@ const ScanDetails = async ({ params }: { params: { scanId: string } }) => {
     return pdfBuffer;
   };
 
-  const pdfBuffer = generatePDF({ htmlContent: scan[0].ai_output });
-
-  console.log(pdfBuffer);
+  const pdfBuffer = await generatePDF({ htmlContent: scan[0].ai_output });
 
   const uploadedPDF = await uploadPDF(params.scanId, pdfBuffer);
-
-  // console.log(uploadedPDF);
 
   // handleDownload();
 
@@ -66,9 +62,7 @@ const ScanDetails = async ({ params }: { params: { scanId: string } }) => {
           <div
             id="resume-content"
             className="w-[70%] h-[40rem] rounded-xl border-2 border-gray-700 bg-white overflow-y-auto"
-          >
-            <p dangerouslySetInnerHTML={{ __html: scan[0].ai_output }}></p>
-          </div>
+          ></div>
         </div>
       </div>
     </div>
