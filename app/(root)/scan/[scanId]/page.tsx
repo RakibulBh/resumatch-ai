@@ -2,15 +2,20 @@ import Navbar from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import React from "react";
-import { findScanById } from "../actions";
+import { findScanById, uploadPDF } from "../actions";
 import { redirect } from "next/navigation";
 import puppeteer from "puppeteer";
 
 const ScanDetails = async ({ params }: { params: { scanId: string } }) => {
   const scan = await findScanById(params.scanId);
+
   if (scan.length === 0) {
     redirect("/dashboard");
   }
+
+  const handleDownload = () => {
+    window.location.href = `/api/download-pdf?scanId=${scan}`;
+  };
 
   const generatePDF = async ({ htmlContent }: { htmlContent: string }) => {
     const browser = await puppeteer.launch();
@@ -32,7 +37,15 @@ const ScanDetails = async ({ params }: { params: { scanId: string } }) => {
     return pdfBuffer;
   };
 
-  generatePDF({ htmlContent: scan[0].ai_output });
+  const pdfBuffer = generatePDF({ htmlContent: scan[0].ai_output });
+
+  console.log(pdfBuffer);
+
+  const uploadedPDF = await uploadPDF(params.scanId, pdfBuffer);
+
+  // console.log(uploadedPDF);
+
+  // handleDownload();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -48,7 +61,7 @@ const ScanDetails = async ({ params }: { params: { scanId: string } }) => {
                 Your resume is <br /> now tailored.
               </h1>
             </div>
-            <Button>Download Resume</Button>;
+            <Button>Download Resume</Button>
           </div>
           <div
             id="resume-content"

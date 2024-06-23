@@ -59,8 +59,8 @@ export function SubmitResumeForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex gap-24">
-          <div className="flex flex-col w-1/2 h-[20rem] justify-between p-4 bg-gray-200 rounded-xl">
+        <div className="flex flex-col md:flex-row gap-12 md:gap-24">
+          <div className="flex flex-col md:w-1/2 h-[20rem] justify-between p-4 bg-gray-200 rounded-xl">
             <FormField
               control={form.control}
               name="resumeText"
@@ -93,7 +93,7 @@ export function SubmitResumeForm() {
               )}
             />
           </div>
-          <div className="w-1/2">
+          <div className="md:w-1/2">
             <FormField
               control={form.control}
               name="jobDescription"
