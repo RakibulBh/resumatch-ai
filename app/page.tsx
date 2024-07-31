@@ -1,6 +1,5 @@
 import Navbar from "@/components/navbar";
 import { Button } from "@/components/ui/button";
-import { infoPageBullets } from "@/constants";
 import Link from "next/link";
 
 const InfoPage = () => {
@@ -10,12 +9,12 @@ const InfoPage = () => {
         ResuMatch’s AI Tailor makes <br /> sure you:
       </h1>
       <div className="flex flex-col gap-4">
-        {infoPageBullets.map((bullet) => (
+        {/* {infoPageBullets.map((bullet) => (
           <div key={bullet.description} className="flex gap-x-3 items-center">
             <div className="w-10 h-10 rounded-full bg-blue-400" />
             <p>{bullet.description}</p>
           </div>
-        ))}
+        ))} */}
       </div>
       <Link href="/dashboard">
         <Button className="w-48">Tailor your resume for free</Button>

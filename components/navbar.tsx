@@ -3,8 +3,6 @@
 import React from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
-import { SignOutButton } from "./sign-out-button";
-import { SignInButton, UserButton } from "@clerk/nextjs";
 
 const Navbar = () => {
   return (
