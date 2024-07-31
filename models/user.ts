@@ -16,13 +16,6 @@ const UserSchema = new Schema<IUser>(
   },
   {
     timestamps: true,
-    toJSON: {
-      versionKey: false,
-      virtuals: true,
-      transform: (_, ret) => {
-        delete ret._id;
-      },
-    },
   }
 );
 const User = models.User || model("User", UserSchema);
