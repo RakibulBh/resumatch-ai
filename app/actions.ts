@@ -3,12 +3,12 @@
 import User, { IUser } from "@/models/user";
 import connectMongo from "@/utils/connectToDb";
 
-const createUser = async (data: any) => {
+const createUser = async (data: IUser) => {
   try {
     console.log("Creating user:", data);
-    // await connectMongo();
+    await connectMongo();
     // Create a new user
-    // const user = await User.create(data);
+    const user = await User.create(data);
   } catch (e) {
     console.error("Error creating user:", e);
   }
