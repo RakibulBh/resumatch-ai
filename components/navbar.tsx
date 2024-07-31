@@ -24,7 +24,7 @@ const Navbar = () => {
           </Link>
         </ul>
       </nav>
-      <Button>Tailor my resume</Button>
+      <Button>Go to dashboard</Button>
     </div>
   );
 };

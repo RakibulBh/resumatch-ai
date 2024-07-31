@@ -43,7 +43,7 @@ export default function Home() {
         </div>
         <div className="flex gap-8 pt-6">
           <Link href="/dashboard">
-            <Button>Go to dashboard</Button>
+            <Button>Try for free</Button>
           </Link>
           <Button>Watch Demo</Button>
         </div>
