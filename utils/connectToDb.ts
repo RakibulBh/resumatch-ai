@@ -5,12 +5,11 @@ const cached: {
   promise?: Promise<typeof mongoose>;
 } = {};
 async function connectMongo() {
-  console.log("MONGO_URI", process.env.MONGO_URI);
-  // if (!MONGO_URI) {
-  //   throw new Error(
-  //     "Please define the MONGO_URI environment variable inside .env.local"
-  //   );
-  // }
+  if (!process.env.MONGO_URI) {
+    throw new Error(
+      "Please define the MONGO_URI environment variable inside .env.local"
+    );
+  }
   if (cached.connection) {
     return cached.connection;
   }

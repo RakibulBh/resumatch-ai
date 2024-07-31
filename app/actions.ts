@@ -5,11 +5,9 @@ import connectMongo from "@/utils/connectToDb";
 
 const createUser = async (data: IUser) => {
   try {
-    console.log("Creating user:", data);
     await connectMongo();
     // Create a new user
     const user = await User.create(data);
-    console.log("User created:", user);
   } catch (e) {
     console.error("Error creating user:", e);
   }
