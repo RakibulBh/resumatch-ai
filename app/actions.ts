@@ -9,6 +9,7 @@ const createUser = async (data: IUser) => {
     await connectMongo();
     // Create a new user
     const user = await User.create(data);
+    console.log("User created:", user);
   } catch (e) {
     console.error("Error creating user:", e);
   }
