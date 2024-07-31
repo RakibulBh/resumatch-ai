@@ -1,6 +1,7 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
+import { createUser } from "@/app/actions";
 
 export async function POST(req: Request) {
   // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
   const eventType = evt.type;
 
   if (evt.type === "user.created") {
-    console.log("userId:", evt.data.id);
+    createUser(evt.data);
   }
 
   console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
