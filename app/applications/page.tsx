@@ -39,12 +39,6 @@ const cards = [
 function ApplicationsPage() {
   return (
     <div className="min-h-screen bg-gray-100">
-      <header className="bg-indigo-600 text-white py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold">Job Application Tracker</h1>
-        </div>
-      </header>
-
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

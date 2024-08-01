@@ -1,8 +1,6 @@
 import { model, models, Schema } from "mongoose";
-
 export interface IApplication {
-  applicationId: string;
-  userId: string;
+  userId: Object;
   jobTitle: string;
   companyName: string;
   jobLocation: string;
@@ -10,21 +8,20 @@ export interface IApplication {
   jobType: string;
   applicationDate: Date;
   applicationStatus: string;
-  applicationLink: string;
-  applicationNotes: string;
-  jobReferenceNumber: string;
-  applicationDeadline: Date;
-  resume: string;
-  coverLetter: string;
+  applicationLink?: string;
+  applicationNotes?: string;
+  jobReferenceNumber?: string;
+  applicationDeadline?: Date;
+  resume?: string;
+  coverLetter?: string;
   referral: boolean;
-  referralSource: string;
-  referralContact: string;
+  referralSource?: string;
+  referralContact?: string;
 }
 
 const ApplicationSchema = new Schema<IApplication>(
   {
-    applicationId: { type: String, required: true },
-    userId: { type: String, required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     jobTitle: { type: String, required: true },
     companyName: { type: String, required: true },
     jobLocation: { type: String, required: true },
@@ -38,7 +35,7 @@ const ApplicationSchema = new Schema<IApplication>(
     applicationDeadline: { type: Date, required: false },
     resume: { type: String, required: false },
     coverLetter: { type: String, required: false },
-    referral: { type: Boolean, required: false },
+    referral: { type: Boolean, required: true },
     referralSource: { type: String, required: false },
     referralContact: { type: String, required: false },
   },
@@ -53,6 +50,7 @@ const ApplicationSchema = new Schema<IApplication>(
     },
   }
 );
+
 const Application =
   models.Application || model("Application", ApplicationSchema);
 export default Application;

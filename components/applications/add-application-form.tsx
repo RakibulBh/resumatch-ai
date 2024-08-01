@@ -17,6 +17,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   CalendarIcon,
   Briefcase,
   Building,
@@ -28,8 +41,18 @@ import {
   Upload,
   ChevronLeft,
   ChevronRight,
+  CheckCircle,
 } from "lucide-react";
+import { format } from "date-fns";
 import ApplicationStatusField from "./application-status-field";
+import { DatePickerWithToday } from "./date-picker-with-today";
+import { createApplication } from "@/app/applications/actions";
+import { Label } from "@radix-ui/react-label";
+import { FileUpload } from "./file-upload";
+import BufferedFileUpload from "./buffered-file-upload";
+import { toast } from "../ui/use-toast";
+import { useUser } from "@clerk/nextjs";
+import { v4 as uuidv4 } from "uuid"; // Add this import
 
 const statuses = [
   "Not Applied",
@@ -69,13 +92,22 @@ const steps = [
   },
 ];
 
+const jobTypes = [
+  "Full-time",
+  "Part-time",
+  "Contract",
+  "Internship",
+  "Remote",
+] as const;
+
 const formSchema = z.object({
   jobTitle: z.string().min(2, "Job title is required"),
-  companyName: z.string().min(2, "Company name is required"),
+  companyName: z.string().min(1, "Company name is required"),
   jobLocation: z.string().min(2, "Job location is required"),
-  jobDescription: z.string().min(10, "Please provide a brief job description"),
-  jobType: z.string().min(2, "Job type is required"),
-  applicationDate: z.string().min(2, "Application date is required"),
+  jobDescription: z.string().optional(),
+  jobType: z.enum(jobTypes),
+  applicationDate: z.string(),
+  applicationDeadline: z.string().optional(),
   applicationStatus: z.string().min(2, "Application status is required"),
   applicationLink: z
     .string()
@@ -84,30 +116,31 @@ const formSchema = z.object({
     .or(z.literal("")),
   applicationNotes: z.string().optional(),
   jobReferenceNumber: z.string().optional(),
-  applicationDeadline: z.string().optional(),
-  resume: z.instanceof(File).optional(),
-  coverLetter: z.instanceof(File).optional(),
+  resume: z.instanceof(ArrayBuffer).optional(),
+  coverLetter: z.instanceof(ArrayBuffer).optional(),
   referral: z.boolean().default(false),
   referralSource: z.string().optional(),
   referralContact: z.string().optional(),
 });
 
 const AddApplicationForm = () => {
+  const { user } = useUser();
+
   const [currentStep, setCurrentStep] = useState(0);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       jobTitle: "",
       companyName: "",
       jobLocation: "",
       jobDescription: "",
-      jobType: "",
-      applicationDate: "",
+      jobType: jobTypes[0],
       applicationStatus: "Not Applied",
       applicationLink: "",
       applicationNotes: "",
       jobReferenceNumber: "",
+      applicationDate: new Date().toISOString().split("T")[0],
       applicationDeadline: "",
       referral: false,
       referralSource: "",
@@ -117,8 +150,35 @@ const AddApplicationForm = () => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  const referralChecked = form.watch("referral");
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const formData = new FormData();
+
+    // Add userId
+    formData.append("userId", user?.id || "");
+
+    Object.entries(values).forEach(([key, value]) => {
+      if (value instanceof ArrayBuffer) {
+        formData.append(key, new Blob([value]));
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, value.toString());
+      }
+    });
+
+    const result = await createApplication(formData);
+    if (result.success) {
+      toast({
+        title: "Application submitted successfully",
+        description: "Your job application has been created.",
+      });
+    } else {
+      toast({
+        title: "Error submitting application",
+        description: result.error,
+        variant: "destructive",
+      });
+    }
   }
 
   const currentFields = steps[currentStep].fields;
@@ -152,8 +212,57 @@ const AddApplicationForm = () => {
                 const label = fieldName
                   .replace(/([A-Z])/g, " $1")
                   .replace(/^./, (str) => str.toUpperCase());
-                if (fieldName === "applicationStatus") {
+                if (fieldName === "resume" || fieldName === "coverLetter") {
+                  return <BufferedFileUpload field={field} label={label} />;
+                }
+                if (fieldName === "applicationDate") {
+                  return (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">
+                        Application Date <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <DatePickerWithToday field={field} />
+                      <FormMessage />
+                    </FormItem>
+                  );
+                } else if (fieldName === "applicationDeadline") {
+                  return (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">
+                        Application Deadline
+                      </FormLabel>
+                      <DatePickerWithToday field={field} />
+                      <FormMessage />
+                    </FormItem>
+                  );
+                } else if (fieldName === "applicationStatus") {
                   return <ApplicationStatusField field={field} />;
+                } else if (fieldName === "jobType") {
+                  return (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">
+                        Job Type <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a job type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {jobTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  );
                 } else if (
                   fieldName === "jobDescription" ||
                   fieldName === "applicationNotes"
@@ -161,7 +270,7 @@ const AddApplicationForm = () => {
                   return (
                     <FormItem>
                       <FormLabel className="text-sm font-medium text-gray-700">
-                        {label} <span className="text-red-500">*</span>
+                        {label}
                       </FormLabel>
                       <FormControl>
                         <Textarea
@@ -169,59 +278,6 @@ const AddApplicationForm = () => {
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                           rows={4}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  );
-                } else if (
-                  fieldName === "resume" ||
-                  fieldName === "coverLetter"
-                ) {
-                  return (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-sm font-medium text-gray-700">
-                        {label} <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                          <div className="space-y-1 text-center">
-                            <svg
-                              className="mx-auto h-12 w-12 text-gray-400"
-                              stroke="currentColor"
-                              fill="none"
-                              viewBox="0 0 48 48"
-                              aria-hidden="true"
-                            >
-                              <path
-                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                strokeWidth={2}
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                            <div className="flex text-sm text-gray-600">
-                              <label
-                                htmlFor={fieldName}
-                                className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
-                              >
-                                <span>Upload a file</span>
-                                <Input
-                                  id={fieldName}
-                                  type="file"
-                                  accept=".pdf,.doc,.docx"
-                                  onChange={(e) =>
-                                    field.onChange(e.target.files?.[0])
-                                  }
-                                  className="sr-only"
-                                />
-                              </label>
-                              <p className="pl-1">or drag and drop</p>
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              PDF, DOC, DOCX up to 10MB
-                            </p>
-                          </div>
-                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -240,16 +296,25 @@ const AddApplicationForm = () => {
                       <FormControl>
                         <Switch
                           checked={field.value as boolean}
-                          onCheckedChange={field.onChange}
+                          onCheckedChange={(checked) => field.onChange(checked)}
                         />
                       </FormControl>
                     </FormItem>
                   );
+                } else if (
+                  (fieldName === "referralSource" ||
+                    fieldName === "referralContact") &&
+                  !referralChecked
+                ) {
+                  return null;
                 } else {
                   return (
                     <FormItem>
                       <FormLabel className="text-sm font-medium text-gray-700">
-                        {label} <span className="text-red-500">*</span>
+                        {label}
+                        {/* {!field.isOptional && (
+                          <span className="text-red-500">*</span>
+                        )} */}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -278,6 +343,7 @@ const AddApplicationForm = () => {
           </Button>
           {currentStep === steps.length - 1 ? (
             <Button
+              key="submit"
               type="submit"
               className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
@@ -285,6 +351,7 @@ const AddApplicationForm = () => {
             </Button>
           ) : (
             <Button
+              key="next"
               type="button"
               onClick={() =>
                 setCurrentStep((prev) => Math.min(steps.length - 1, prev + 1))

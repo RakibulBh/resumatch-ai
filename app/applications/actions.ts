@@ -1,7 +1,19 @@
 "use server";
 
-import { IApplication } from "@/models/application";
+import connectMongo from "@/utils/connectToDb";
 
-async function createApplication(data: IApplication) {}
+export async function createApplication(formData: FormData) {
+  try {
+    await connectMongo();
 
-export { createApplication };
+    console.log("applicationData:", formData);
+
+    // Create a new application
+    // const application = await Application.create(applicationData);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating application:", error);
+    return { success: false, error: "Failed to create application" };
+  }
+}
