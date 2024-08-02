@@ -31,9 +31,13 @@ export async function getApplications(clerkUserId: string | undefined) {
 
     const mongoUser = await findUserByClerkId(clerkUserId);
 
+    console.log("mongoUser", mongoUser);
+
     const applications = await Application.find({ userId: mongoUser?._id });
 
-    return applications;
+    console.log("applications", applications);
+
+    return JSON.parse(JSON.stringify(applications));
   } catch (e) {
     console.error("Error getting applications:", e);
   }

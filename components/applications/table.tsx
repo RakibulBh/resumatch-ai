@@ -1,9 +1,11 @@
+"use client";
 import React from "react";
-import { Button } from "../ui/button";
 import TableRow from "./table-row";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import { getApplications } from "@/app/applications/actions";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 const tableCols = [
   { title: "Company" },
@@ -14,15 +16,14 @@ const tableCols = [
 ];
 
 const Table = () => {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: [`application`],
-    queryFn: async () => {
-      const data = await getApplications(user?.id);
-      return data;
-    },
-    refetchOnMount: false,
+  const [isLoading, setisLoading] = React.useState(true);
+
+  const { data: applications } = useQuery({
+    queryKey: [`applications`],
+    queryFn: () => getApplications(user?.id),
+    enabled: !!isLoaded,
   });
 
   return (
@@ -38,10 +39,10 @@ const Table = () => {
           </tr>
         </thead>
         <tbody className="bg-white">
-          {data?.map((application) => (
-            <TableRow key={application._id} />
-          ))}
-          {/* Add more rows as needed */}
+          {applications &&
+            applications.map((application: any) => (
+              <TableRow application={application} key={application._id} />
+            ))}
         </tbody>
       </table>
     </div>

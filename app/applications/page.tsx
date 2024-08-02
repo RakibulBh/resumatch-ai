@@ -12,9 +12,6 @@ import {
   ChevronDown,
 } from "lucide-react";
 import AddApplicationDialog from "@/components/applications/add-application-dialog";
-import { useQuery } from "@tanstack/react-query";
-import { getApplications } from "./actions";
-import { useUser } from "@clerk/nextjs";
 
 const cards = [
   {

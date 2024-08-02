@@ -6,12 +6,13 @@ import { userAgent } from "next/server";
 
 export const findUserByClerkId = async (clerkUserId: string | undefined) => {
   try {
-    if (!clerkUserId) {
-      return;
-    }
     await connectMongo();
 
+    console.log("clerkUserId", clerkUserId);
+
     const mongoUser = await User.findOne({ clerkUserId });
+
+    console.log("mongoUser", mongoUser);
 
     return JSON.parse(JSON.stringify(mongoUser));
   } catch (e) {
@@ -24,6 +25,7 @@ const createUser = async (data: IUser) => {
     await connectMongo();
     // Create a new user
     const user = await User.create(data);
+    return JSON.parse(JSON.stringify(user));
   } catch (e) {
     console.error("Error creating user:", e);
   }
