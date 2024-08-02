@@ -1,6 +1,9 @@
 import React from "react";
 import { Button } from "../ui/button";
 import TableRow from "./table-row";
+import { useUser } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
+import { getApplications } from "@/app/applications/actions";
 
 const tableCols = [
   { title: "Company" },
@@ -11,6 +14,17 @@ const tableCols = [
 ];
 
 const Table = () => {
+  const { user } = useUser();
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: [`application`],
+    queryFn: async () => {
+      const data = await getApplications(user?.id);
+      return data;
+    },
+    refetchOnMount: false,
+  });
+
   return (
     <div className="overflow-x-auto shadow-lg rounded-lg">
       <table className="w-full border-collapse">
@@ -24,14 +38,9 @@ const Table = () => {
           </tr>
         </thead>
         <tbody className="bg-white">
-          <TableRow />
-          <TableRow />
-          <TableRow />
-          <TableRow />
-          <TableRow />
-          <TableRow />
-          <TableRow />
-          <TableRow />
+          {data?.map((application) => (
+            <TableRow key={application._id} />
+          ))}
           {/* Add more rows as needed */}
         </tbody>
       </table>

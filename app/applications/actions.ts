@@ -1,19 +1,40 @@
 "use server";
 
+import Application from "@/models/application";
 import connectMongo from "@/utils/connectToDb";
+import { findUserByClerkId } from "../actions";
 
 export async function createApplication(formData: FormData) {
   try {
     await connectMongo();
 
-    console.log("applicationData:", formData);
+    const values: any = {};
 
-    // Create a new application
-    // const application = await Application.create(applicationData);
+    formData.forEach((value, key) => {
+      if (value !== "") {
+        values[key] = value;
+      }
+    });
+
+    const application = await Application.create(values);
 
     return { success: true };
   } catch (error) {
     console.error("Error creating application:", error);
     return { success: false, error: "Failed to create application" };
+  }
+}
+
+export async function getApplications(clerkUserId: string | undefined) {
+  try {
+    await connectMongo();
+
+    const mongoUser = await findUserByClerkId(clerkUserId);
+
+    const applications = await Application.find({ userId: mongoUser?._id });
+
+    return applications;
+  } catch (e) {
+    console.error("Error getting applications:", e);
   }
 }

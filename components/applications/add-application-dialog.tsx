@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
 import { PlusCircle } from "lucide-react";
-import AddApplicationForm from "./add-application-form";
+import { AddApplicationForm } from "./add-application-form";
 
 const AddApplicationDialog = () => {
   return (
