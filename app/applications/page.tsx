@@ -15,29 +15,6 @@ import {
 import AddApplicationDialog from "@/components/applications/add-application-dialog";
 import TopBar from "@/components/applications/top-bar";
 
-const cards = [
-  {
-    icon: <Briefcase className="text-indigo-600" />,
-    title: "Total Applications",
-    value: 3,
-  },
-  {
-    icon: <MessageCircle className="text-indigo-600" />,
-    title: "Total Interviews",
-    value: 2,
-  },
-  {
-    icon: <Check className="text-green-600" />,
-    title: "Total Offers",
-    value: 1,
-  },
-  {
-    icon: <X className="text-red-600" />,
-    title: "Total Rejections",
-    value: 0,
-  },
-];
-
 function ApplicationsPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
@@ -45,7 +22,7 @@ function ApplicationsPage() {
     <div className="min-h-screen bg-gray-100">
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 sm:px-0">
-          <TopBar cards={cards} username="John Doe" />
+          <TopBar />
 
           <div className="mt-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
             <AddApplicationDialog
