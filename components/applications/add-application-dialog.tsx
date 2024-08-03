@@ -27,7 +27,7 @@ const AddApplicationDialog = ({
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>Add an application</DialogHeader>
+        <DialogTitle>Add an application</DialogTitle>
         <AddApplicationForm onOpenChange={onOpenChange} />
       </DialogContent>
     </Dialog>

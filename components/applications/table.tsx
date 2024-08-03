@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import TableRow from "./table-row";
 import { useUser } from "@clerk/nextjs";
@@ -9,11 +10,11 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const tableCols = [
-  { title: "Company" },
-  { title: "Position" },
-  { title: "Status" },
-  { title: "Application Date" },
-  { title: "Actions" },
+  { title: "Company", id: "company" },
+  { title: "Position", id: "position" },
+  { title: "Status", id: "status" },
+  { title: "Application Date", id: "applicationDate" },
+  { title: "Actions", id: "actions" },
 ];
 
 const ITEMS_PER_PAGE = 10;
@@ -43,10 +44,7 @@ const Table = () => {
           <thead className="bg-indigo-600 text-white sticky top-0">
             <tr>
               {tableCols.map((col) => (
-                <th
-                  key={col.title}
-                  className="py-4 px-6 text-left font-semibold"
-                >
+                <th key={col.id} className="py-4 px-6 text-left font-semibold">
                   {col.title}
                 </th>
               ))}
@@ -57,16 +55,19 @@ const Table = () => {
               ? Array(ITEMS_PER_PAGE)
                   .fill(0)
                   .map((_, index) => (
-                    <tr key={index}>
-                      {tableCols.map((col, colIndex) => (
-                        <td key={colIndex} className="py-4 px-6">
+                    <tr key={`skeleton-${index}`}>
+                      {tableCols.map((col) => (
+                        <td
+                          key={`skeleton-${index}-${col.id}`}
+                          className="py-4 px-6"
+                        >
                           <Skeleton />
                         </td>
                       ))}
                     </tr>
                   ))
               : paginatedApplications?.map((application: any) => (
-                  <TableRow application={application} key={application._id} />
+                  <TableRow key={application._id} application={application} />
                 ))}
           </tbody>
         </table>

@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.623.0",
+    "@aws-sdk/s3-request-presigner": "^3.623.0",
     "@clerk/nextjs": "^5.2.8",
     "@hookform/resolvers": "^3.6.0",
     "@radix-ui/react-dialog": "^1.1.1",
@@ -25,6 +27,7 @@
     "@tanstack/react-query": "^5.51.21",
     "@tanstack/react-query-devtools": "^5.51.21",
     "@xixixao/uploadstuff": "^0.0.5",
+    "axios": "^1.7.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",

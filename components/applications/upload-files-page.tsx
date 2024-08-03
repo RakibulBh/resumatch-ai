@@ -1,3 +1,5 @@
+// uploads.tsx
+"use client";
 import {
   FormField,
   FormItem,
@@ -5,14 +7,20 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { FileText, Paperclip } from "lucide-react";
+import { FileText } from "lucide-react";
+import React from "react";
+import { Control } from "react-hook-form";
+import { FileInput } from "./form-fields/file-input";
 
-export const uploads = (form: any) => {
+interface UploadsProps {
+  control: Control<any>;
+}
+
+export const Uploads: React.FC<UploadsProps> = ({ control }) => {
   return (
     <div className="space-y-6">
       <FormField
-        control={form.control}
+        control={control}
         name="resume"
         render={({ field }) => (
           <FormItem>
@@ -21,22 +29,12 @@ export const uploads = (form: any) => {
               Resume
             </FormLabel>
             <FormControl>
-              <div className="mt-1 flex items-center">
-                <Input
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={(e) => field.onChange(e.target.files?.[0] || null)}
-                  className="hidden"
-                  id="resume-upload"
-                />
-                <label
-                  htmlFor="resume-upload"
-                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <Paperclip className="mr-2 h-4 w-4" />
-                  Upload Resume
-                </label>
-              </div>
+              <FileInput
+                onChange={field.onChange}
+                accept=".pdf"
+                id="resume-upload"
+                label="Upload Resume"
+              />
             </FormControl>
             <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
@@ -44,7 +42,7 @@ export const uploads = (form: any) => {
       />
 
       <FormField
-        control={form.control}
+        control={control}
         name="coverLetter"
         render={({ field }) => (
           <FormItem>
@@ -53,22 +51,12 @@ export const uploads = (form: any) => {
               Cover Letter
             </FormLabel>
             <FormControl>
-              <div className="mt-1 flex items-center">
-                <Input
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={(e) => field.onChange(e.target.files?.[0] || null)}
-                  className="hidden"
-                  id="cover-letter-upload"
-                />
-                <label
-                  htmlFor="cover-letter-upload"
-                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <Paperclip className="mr-2 h-4 w-4" />
-                  Upload Cover Letter
-                </label>
-              </div>
+              <FileInput
+                onChange={field.onChange}
+                accept=".pdf"
+                id="cover-letter-upload"
+                label="Upload Cover Letter"
+              />
             </FormControl>
             <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>

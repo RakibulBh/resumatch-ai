@@ -5,53 +5,18 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { createApplication } from "@/app/applications/actions";
+import { createApplication, getSignedURL } from "@/app/applications/actions";
 import { useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { findUserByClerkId } from "@/app/actions";
-import { Switch } from "@/components/ui/switch";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-  Form,
-  FormDescription,
-} from "@/components/ui/form";
-import {
-  Activity,
-  Briefcase,
-  Building2,
-  Calendar,
-  File,
-  FileText,
-  Hash,
-  Link,
-  MapPin,
-  Paperclip,
-  StickyNote,
-  X,
-  UserPlus,
-  LinkedinIcon,
-  User,
-} from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { Textarea } from "../ui/textarea";
-import { uploads } from "./upload-files-page";
+import { Uploads } from "./upload-files-page";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BasicJobInfo } from "./form-fields/basic-job-info";
 import { ApplicationDetails } from "./form-fields/application-details";
 import { AdditionalInformation } from "./form-fields/additional-information";
-
-type FormValues = z.infer<typeof formSchema>;
+import { Form } from "../ui/form";
+import { referralInfo } from "./form-fields/referral-info";
+import { computeSHA256 } from "@/utils/computeHash";
 
 const formSchema = z.object({
   jobTitle: z
@@ -72,93 +37,27 @@ const formSchema = z.object({
   applicationLink: z.string().optional(),
   applicationNotes: z.string().optional(),
   jobReferenceNumber: z.string().optional(),
-  applicationDeadline: z
-    .string()
-    .optional()
-    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
-      message: "Application Deadline must be a valid date (YYYY-MM-DD)",
-    }),
-  resume: z.string().optional(),
-  coverLetter: z.string().optional(),
+  applicationDeadline: z.string().optional(),
+  resume: z
+    .custom()
+    .refine((file) => file instanceof File, "Please upload a PDF Document")
+    .optional(),
+  coverLetter: z
+    .custom()
+    .refine((file) => file instanceof File, "Please upload a PDF Document")
+    .optional(),
   referral: z.boolean().default(false),
   referralSource: z.string().optional(),
   referralContact: z.string().optional(),
 });
 
-export const referralInfo = (form: any) => {
-  return (
-    <div className="space-y-6 bg-white rounded-lg shadow-sm">
-      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-        <div className="space-y-0.5">
-          <FormLabel className="text-base flex items-center">
-            <UserPlus className="mr-2 h-5 w-5 text-indigo-500" />
-            Referral
-          </FormLabel>
-          <FormDescription className="text-sm text-gray-500">
-            Do you have a referral for this job application?
-          </FormDescription>
-        </div>
-        <Controller
-          name="referral"
-          control={form.control}
-          render={({ field: { onChange, value } }) => (
-            <Switch checked={value} onCheckedChange={onChange} />
-          )}
-        ></Controller>
-      </FormItem>
+type FormValues = z.infer<typeof formSchema>;
 
-      <FormField
-        control={form.control}
-        name="referralSource"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
-              <LinkedinIcon className="mr-2 h-4 w-4 text-indigo-500" />
-              Referral Source
-            </FormLabel>
-            <FormControl>
-              <Input
-                placeholder="e.g. LinkedIn, Company Website, Job Fair"
-                {...field}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              />
-            </FormControl>
-            <FormDescription className="text-xs text-gray-500 mt-1">
-              Where did you find this referral opportunity?
-            </FormDescription>
-            <FormMessage className="text-xs text-red-500 mt-1" />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="referralContact"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
-              <User className="mr-2 h-4 w-4 text-indigo-500" />
-              Referral Contact
-            </FormLabel>
-            <FormControl>
-              <Input
-                placeholder="e.g. John Doe, jane@example.com"
-                {...field}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              />
-            </FormControl>
-            <FormDescription className="text-xs text-gray-500 mt-1">
-              Name or contact information of your referral
-            </FormDescription>
-            <FormMessage className="text-xs text-red-500 mt-1" />
-          </FormItem>
-        )}
-      />
-    </div>
-  );
-};
-
-export const AddApplicationForm = ({ onOpenChange }: { onOpenChange: any }) => {
+export const AddApplicationForm = ({
+  onOpenChange,
+}: {
+  onOpenChange: (state: boolean) => void;
+}) => {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
   const { user } = useUser();
@@ -189,8 +88,8 @@ export const AddApplicationForm = ({ onOpenChange }: { onOpenChange: any }) => {
       applicationNotes: "",
       jobReferenceNumber: "",
       applicationDeadline: "",
-      resume: "",
-      coverLetter: "",
+      resume: undefined,
+      coverLetter: undefined,
       referral: false,
       referralSource: "",
       referralContact: "",
@@ -199,19 +98,69 @@ export const AddApplicationForm = ({ onOpenChange }: { onOpenChange: any }) => {
 
   // 2. Define a submit handler.
   async function onSubmit(values: FormValues) {
-    const formData: FormData = new FormData();
-
+    const formData = new FormData();
     const mongoUser = await findUserByClerkId(user?.id);
     formData.append("userId", mongoUser?._id);
 
-    (Object.keys(values) as Array<keyof FormValues>).forEach((key) => {
-      const value = values[key];
-      if (value !== undefined && value !== null) {
-        formData.append(key, value.toString());
-      }
-    });
+    const fileUploads = [];
 
-    mutateAsync(formData);
+    // Helper function for file uploads
+    const uploadFile = async (
+      file: File,
+      fileType: "resume" | "coverLetter"
+    ) => {
+      if (!file) return;
+
+      const signedUrl = await getSignedURL({
+        clerkUserId: user?.id,
+        type: file.type,
+        size: file.size,
+        checksum: await computeSHA256(file),
+      });
+
+      if (signedUrl.error) {
+        console.error(
+          `Error getting signed URL for ${fileType}:`,
+          signedUrl.error
+        );
+        return;
+      }
+
+      const url = signedUrl.success?.url;
+
+      await fetch(url, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+
+      formData.append(fileType, url.split("?")[0]);
+    };
+
+    // Queue file uploads
+    if (values.resume) fileUploads.push(uploadFile(values.resume, "resume"));
+    if (values.coverLetter)
+      fileUploads.push(uploadFile(values.coverLetter, "coverLetter"));
+
+    try {
+      // Run file uploads concurrently
+      await Promise.all(fileUploads);
+
+      // Append other form values
+      Object.entries(values).forEach(([key, value]) => {
+        if (value != null && !["resume", "coverLetter"].includes(key)) {
+          formData.append(
+            key,
+            value instanceof File ? value : value.toString()
+          );
+        }
+      });
+
+      await mutateAsync(formData);
+    } catch (e) {
+      console.error("Error in form submission:", e);
+      // Handle error (e.g., show user-friendly error message)
+    }
   }
 
   return (
@@ -220,7 +169,7 @@ export const AddApplicationForm = ({ onOpenChange }: { onOpenChange: any }) => {
         {currentStep === 0 && BasicJobInfo(form)}
         {currentStep === 1 && ApplicationDetails(form)}
         {currentStep === 2 && AdditionalInformation(form)}
-        {currentStep === 3 && uploads(form)}
+        {currentStep === 3 && <Uploads control={form.control} />}
         {currentStep === 4 && referralInfo(form)}
         <div className="flex justify-between">
           {currentStep > 0 ? (
