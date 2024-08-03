@@ -51,6 +51,58 @@ const formSchema = z.object({
   referralContact: z.string().optional(),
 });
 
+const stepSchemas = [
+  // Step 1: Basic Job Info
+  z.object({
+    jobTitle: z
+      .string()
+      .min(2, { message: "Job Title must be at least 2 characters long" }),
+    companyName: z
+      .string()
+      .min(2, { message: "Company Name must be at least 2 characters long" }),
+    jobLocation: z
+      .string()
+      .min(2, { message: "Job Location must be at least 2 characters long" }),
+  }),
+
+  // Step 2: Application Details
+  z.object({
+    jobDescription: z.string().min(5, {
+      message: "Job Description must be at least 5 characters long",
+    }),
+    jobType: z.string(),
+    applicationDate: z.string(),
+    applicationStatus: z.string(),
+    applicationLink: z.string().optional(),
+  }),
+
+  // Step 3: Additional Information
+  z.object({
+    applicationNotes: z.string().optional(),
+    jobReferenceNumber: z.string().optional(),
+    applicationDeadline: z.string().optional(),
+  }),
+
+  // Step 4: Uploads
+  z.object({
+    resume: z
+      .custom()
+      .refine((file) => file instanceof File, "Please upload a PDF Document")
+      .optional(),
+    coverLetter: z
+      .custom()
+      .refine((file) => file instanceof File, "Please upload a PDF Document")
+      .optional(),
+  }),
+
+  // Step 5: Referral Info
+  z.object({
+    referral: z.boolean(),
+    referralSource: z.string().optional(),
+    referralContact: z.string().optional(),
+  }),
+];
+
 type FormValues = z.infer<typeof formSchema>;
 
 export const AddApplicationForm = ({
@@ -75,7 +127,7 @@ export const AddApplicationForm = ({
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(stepSchemas[currentStep]),
     defaultValues: {
       jobTitle: "",
       companyName: "",
@@ -98,6 +150,21 @@ export const AddApplicationForm = ({
 
   // 2. Define a submit handler.
   async function onSubmit(values: FormValues) {
+    const isValid = await form.trigger();
+    if (!isValid) {
+      // Find the first step with validation errors
+      for (let i = 0; i < stepSchemas.length; i++) {
+        const stepIsValid = await form.trigger(
+          Object.keys(stepSchemas[i].shape) as any
+        );
+        if (!stepIsValid) {
+          setCurrentStep(i);
+          return;
+        }
+      }
+      return;
+    }
+
     const formData = new FormData();
     const mongoUser = await findUserByClerkId(user?.id);
     formData.append("userId", mongoUser?._id);
@@ -106,7 +173,7 @@ export const AddApplicationForm = ({
 
     // Helper function for file uploads
     const uploadFile = async (
-      file: File,
+      file: any,
       fileType: "resume" | "coverLetter"
     ) => {
       if (!file) return;
@@ -163,6 +230,13 @@ export const AddApplicationForm = ({
     }
   }
 
+  const handleNextStep = async () => {
+    const isValid = await form.trigger();
+    if (isValid) {
+      setCurrentStep((prev) => prev + 1);
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -182,17 +256,13 @@ export const AddApplicationForm = ({
           ) : (
             <div />
           )}
-          {currentStep === 4 ? (
-            <Button key="submit" type="submit">
-              Submit
+          {currentStep < 4 ? (
+            <Button key="next" type="button" onClick={handleNextStep}>
+              Next
             </Button>
           ) : (
-            <Button
-              key="next"
-              type="button"
-              onClick={() => setCurrentStep((prev) => prev + 1)}
-            >
-              Next
+            <Button key="submit" type="submit">
+              Submit
             </Button>
           )}
         </div>
