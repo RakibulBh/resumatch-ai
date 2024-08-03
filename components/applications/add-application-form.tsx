@@ -51,6 +51,8 @@ import { BasicJobInfo } from "./form-fields/basic-job-info";
 import { ApplicationDetails } from "./form-fields/application-details";
 import { AdditionalInformation } from "./form-fields/additional-information";
 
+type FormValues = z.infer<typeof formSchema>;
+
 const formSchema = z.object({
   jobTitle: z
     .string()
@@ -196,15 +198,18 @@ export const AddApplicationForm = ({ onOpenChange }: { onOpenChange: any }) => {
   });
 
   // 2. Define a submit handler.
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: FormValues) {
     const formData: FormData = new FormData();
 
     const mongoUser = await findUserByClerkId(user?.id);
     formData.append("userId", mongoUser?._id);
 
-    for (const key in values) {
-      formData.append(key, values[key]);
-    }
+    (Object.keys(values) as Array<keyof FormValues>).forEach((key) => {
+      const value = values[key];
+      if (value !== undefined && value !== null) {
+        formData.append(key, value.toString());
+      }
+    });
 
     mutateAsync(formData);
   }
