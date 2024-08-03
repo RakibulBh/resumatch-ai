@@ -18,9 +18,7 @@ const tableCols = [
 const Table = () => {
   const { user, isLoaded } = useUser();
 
-  const [isLoading, setisLoading] = React.useState(true);
-
-  const { data: applications } = useQuery({
+  const { data: applications, isLoading } = useQuery({
     queryKey: [`applications`],
     queryFn: () => getApplications(user?.id),
     enabled: !!isLoaded,

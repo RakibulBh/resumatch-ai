@@ -7,13 +7,7 @@ import { userAgent } from "next/server";
 export const findUserByClerkId = async (clerkUserId: string | undefined) => {
   try {
     await connectMongo();
-
-    console.log("clerkUserId", clerkUserId);
-
     const mongoUser = await User.findOne({ clerkUserId });
-
-    console.log("mongoUser", mongoUser);
-
     return JSON.parse(JSON.stringify(mongoUser));
   } catch (e) {
     console.error("Error finding user by clerk id:", e);

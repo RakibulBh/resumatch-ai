@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import Table from "@/components/applications/table";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,8 @@ const cards = [
 ];
 
 function ApplicationsPage() {
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
   return (
     <div className="min-h-screen bg-gray-100">
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -71,7 +74,10 @@ function ApplicationsPage() {
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-            <AddApplicationDialog />
+            <AddApplicationDialog
+              isOpen={isDialogOpen}
+              onOpenChange={setIsDialogOpen}
+            />
             <div className="flex space-x-4">
               <div className="relative">
                 <input

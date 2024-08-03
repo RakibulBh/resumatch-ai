@@ -16,12 +16,9 @@ export async function createApplication(formData: FormData) {
       }
     });
 
-    const application = await Application.create(values);
-
-    return { success: true };
+    await Application.create(values);
   } catch (error) {
     console.error("Error creating application:", error);
-    return { success: false, error: "Failed to create application" };
   }
 }
 
@@ -31,11 +28,7 @@ export async function getApplications(clerkUserId: string | undefined) {
 
     const mongoUser = await findUserByClerkId(clerkUserId);
 
-    console.log("mongoUser", mongoUser);
-
     const applications = await Application.find({ userId: mongoUser?._id });
-
-    console.log("applications", applications);
 
     return JSON.parse(JSON.stringify(applications));
   } catch (e) {

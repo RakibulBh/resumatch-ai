@@ -1,83 +1,147 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { createApplication } from "@/app/applications/actions";
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { findUserByClerkId } from "@/app/actions";
+import { Switch } from "@/components/ui/switch";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  Form,
+  FormDescription,
+} from "@/components/ui/form";
+import {
+  Activity,
+  Briefcase,
+  Building2,
+  Calendar,
+  File,
+  FileText,
+  Hash,
+  Link,
+  MapPin,
+  Paperclip,
+  StickyNote,
+  X,
+  UserPlus,
+  LinkedinIcon,
+  User,
+} from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Textarea } from "../ui/textarea";
+import { uploads } from "./upload-files-page";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const formSchema = z.object({
-  jobTitle: z.string().min(2),
-  companyName: z.string().min(2),
-  jobLocation: z.string().min(2),
-  jobDescription: z.string().min(5),
-  jobType: z.string().min(2),
+  jobTitle: z
+    .string()
+    .min(2, { message: "Job Title must be at least 2 characters long" }),
+  companyName: z
+    .string()
+    .min(2, { message: "Company Name must be at least 2 characters long" }),
+  jobLocation: z
+    .string()
+    .min(2, { message: "Job Location must be at least 2 characters long" }),
+  jobDescription: z
+    .string()
+    .min(5, { message: "Job Description must be at least 5 characters long" }),
+  jobType: z.string(),
   applicationDate: z.string(),
-  applicationStatus: z.string().min(2),
+  applicationStatus: z.string(),
   applicationLink: z.string().optional(),
   applicationNotes: z.string().optional(),
   jobReferenceNumber: z.string().optional(),
-  applicationDeadline: z.string().optional(),
+  applicationDeadline: z
+    .string()
+    .optional()
+    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+      message: "Application Deadline must be a valid date (YYYY-MM-DD)",
+    }),
   resume: z.string().optional(),
   coverLetter: z.string().optional(),
-  referral: z.boolean(),
+  referral: z.boolean().default(false),
   referralSource: z.string().optional(),
   referralContact: z.string().optional(),
 });
 
 const requiredFields = (form: any) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-6">
       <FormField
         control={form.control}
         name="jobTitle"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Username</FormLabel>
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <Briefcase className="mr-2 h-4 w-4" />
+              Job Title
+            </FormLabel>
             <FormControl>
-              <Input placeholder="Jr. Software Engineer" {...field} />
+              <Input
+                placeholder="e.g. Jr. Software Engineer"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                {...field}
+              />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="companyName"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Company Name</FormLabel>
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <Building2 className="mr-2 h-4 w-4" />
+              Company Name
+            </FormLabel>
             <FormControl>
-              <Input placeholder="Google" {...field} />
+              <Input
+                placeholder="e.g. Google"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                {...field}
+              />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="jobLocation"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Job Location</FormLabel>
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <MapPin className="mr-2 h-4 w-4" />
+              Job Location
+            </FormLabel>
             <FormControl>
-              <Input placeholder="Mountain View, CA" {...field} />
+              <Input
+                placeholder="e.g. Mountain View, CA"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                {...field}
+              />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
@@ -87,69 +151,120 @@ const requiredFields = (form: any) => {
 
 export const furtherInfo = (form: any) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-6">
       <FormField
         control={form.control}
         name="jobDescription"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Job Description</FormLabel>
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <FileText className="mr-2 h-4 w-4" />
+              Job Description
+            </FormLabel>
             <FormControl>
-              <Input placeholder="Software Engineer" {...field} />
+              <Input
+                placeholder="e.g. Developing web applications using React"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                {...field}
+              />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="jobType"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Job Type</FormLabel>
-            <FormControl>
-              <Input placeholder="Full-time" {...field} />
-            </FormControl>
-            <FormMessage />
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <Briefcase className="mr-2 h-4 w-4" />
+              Job Type
+            </FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                  <SelectValue placeholder="Select job type" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="full-time">Full-time</SelectItem>
+                <SelectItem value="part-time">Part-time</SelectItem>
+                <SelectItem value="contract">Contract</SelectItem>
+                <SelectItem value="internship">Internship</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="applicationDate"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Application Date</FormLabel>
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <Calendar className="mr-2 h-4 w-4" />
+              Application Date
+            </FormLabel>
             <FormControl>
-              <Input type="date" {...field} />
+              <Input
+                type="date"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                {...field}
+              />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="applicationStatus"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Application Status</FormLabel>
-            <FormControl>
-              <Input placeholder="Applied" {...field} />
-            </FormControl>
-            <FormMessage />
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <Activity className="mr-2 h-4 w-4" />
+              Application Status
+            </FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                  <SelectValue placeholder="Select application status" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="applied">Applied</SelectItem>
+                <SelectItem value="interviewing">Interviewing</SelectItem>
+                <SelectItem value="offer">Offer Received</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="applicationLink"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Application Link</FormLabel>
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <Link className="mr-2 h-4 w-4" />
+              Application Link
+            </FormLabel>
             <FormControl>
-              <Input placeholder="https://google.com" {...field} />
+              <Input
+                placeholder="e.g. https://company.com/job-application"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                {...field}
+              />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
@@ -159,76 +274,66 @@ export const furtherInfo = (form: any) => {
 
 export const extraInfo = (form: any) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-6">
       <FormField
         control={form.control}
         name="applicationNotes"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Application Notes</FormLabel>
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <StickyNote className="mr-2 h-4 w-4" />
+              Application Notes
+            </FormLabel>
             <FormControl>
-              <Input placeholder="Notes" {...field} />
+              <Textarea
+                placeholder="Add any additional notes or comments about your application here..."
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 min-h-[100px]"
+                {...field}
+              />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="jobReferenceNumber"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Job Reference Number</FormLabel>
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <Hash className="mr-2 h-4 w-4" />
+              Job Reference Number
+            </FormLabel>
             <FormControl>
-              <Input placeholder="123456" {...field} />
+              <Input
+                placeholder="e.g. JOB123456"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                {...field}
+              />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="applicationDeadline"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Application Deadline</FormLabel>
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <Calendar className="mr-2 h-4 w-4" />
+              Application Deadline
+            </FormLabel>
             <FormControl>
-              <Input type="date" {...field} />
+              <Input
+                type="date"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                {...field}
+              />
             </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </div>
-  );
-};
-
-export const uploads = (form: any) => {
-  return (
-    <div className="space-y-2">
-      <FormField
-        control={form.control}
-        name="resume"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Resume</FormLabel>
-            <FormControl>
-              <Input placeholder="Resume" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="coverLetter"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Cover Letter</FormLabel>
-            <FormControl>
-              <Input placeholder="Cover Letter" {...field} />
-            </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
@@ -238,40 +343,70 @@ export const uploads = (form: any) => {
 
 export const referralInfo = (form: any) => {
   return (
-    <div className="space-y-2">
-      <FormItem>
-        <FormLabel>Referral</FormLabel>
-        <FormControl>
-          <Input type="checkbox" {...form.register("referral")} />
-        </FormControl>
-        <FormDescription>This is your public display name.</FormDescription>
-        <FormMessage />
+    <div className="space-y-6 bg-white rounded-lg shadow-sm">
+      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+        <div className="space-y-0.5">
+          <FormLabel className="text-base flex items-center">
+            <UserPlus className="mr-2 h-5 w-5 text-indigo-500" />
+            Referral
+          </FormLabel>
+          <FormDescription className="text-sm text-gray-500">
+            Do you have a referral for this job application?
+          </FormDescription>
+        </div>
+        <Controller
+          name="referral"
+          control={form.control}
+          render={({ field: { onChange, value } }) => (
+            <Switch checked={value} onCheckedChange={onChange} />
+          )}
+        ></Controller>
       </FormItem>
+
       <FormField
         control={form.control}
         name="referralSource"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Referral Source</FormLabel>
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <LinkedinIcon className="mr-2 h-4 w-4 text-indigo-500" />
+              Referral Source
+            </FormLabel>
             <FormControl>
-              <Input placeholder="LinkedIn" {...field} />
+              <Input
+                placeholder="e.g. LinkedIn, Company Website, Job Fair"
+                {...field}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              />
             </FormControl>
-            <FormDescription>This is your public display name.</FormDescription>
-            <FormMessage />
+            <FormDescription className="text-xs text-gray-500 mt-1">
+              Where did you find this referral opportunity?
+            </FormDescription>
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="referralContact"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Referral Contact</FormLabel>
+            <FormLabel className="flex items-center text-sm font-medium text-gray-700">
+              <User className="mr-2 h-4 w-4 text-indigo-500" />
+              Referral Contact
+            </FormLabel>
             <FormControl>
-              <Input placeholder="John Doe" {...field} />
+              <Input
+                placeholder="e.g. John Doe, jane@example.com"
+                {...field}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              />
             </FormControl>
-            <FormDescription>This is your public display name.</FormDescription>
-            <FormMessage />
+            <FormDescription className="text-xs text-gray-500 mt-1">
+              Name or contact information of your referral
+            </FormDescription>
+            <FormMessage className="text-xs text-red-500 mt-1" />
           </FormItem>
         )}
       />
@@ -279,9 +414,21 @@ export const referralInfo = (form: any) => {
   );
 };
 
-export const AddApplicationForm = () => {
+export const AddApplicationForm = ({ onOpenChange }: { onOpenChange: any }) => {
+  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
   const { user } = useUser();
+
+  const { data, mutateAsync, isPending } = useMutation({
+    mutationFn: (formData: FormData) => createApplication(formData),
+    onError: (error) => {
+      return alert(error.message || "Failed to update");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      onOpenChange(false);
+    },
+  });
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
@@ -291,9 +438,9 @@ export const AddApplicationForm = () => {
       companyName: "",
       jobLocation: "",
       jobDescription: "",
-      jobType: "",
-      applicationDate: new Date().toISOString(),
-      applicationStatus: "",
+      jobType: "part-time",
+      applicationDate: "",
+      applicationStatus: "applied",
       applicationLink: "",
       applicationNotes: "",
       jobReferenceNumber: "",
@@ -317,7 +464,7 @@ export const AddApplicationForm = () => {
       formData.append(key, values[key]);
     }
 
-    const response = await createApplication(formData);
+    mutateAsync(formData);
   }
 
   return (

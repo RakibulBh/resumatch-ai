@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import {
   Dialog,
@@ -10,9 +11,15 @@ import { Button } from "../ui/button";
 import { PlusCircle } from "lucide-react";
 import { AddApplicationForm } from "./add-application-form";
 
-const AddApplicationDialog = () => {
+const AddApplicationDialog = ({
+  isOpen,
+  onOpenChange,
+}: {
+  isOpen: boolean;
+  onOpenChange: any;
+}) => {
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">
           <PlusCircle className="mr-2" size={20} />
@@ -20,8 +27,8 @@ const AddApplicationDialog = () => {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader></DialogHeader>
-        <AddApplicationForm />
+        <DialogHeader>Add an application</DialogHeader>
+        <AddApplicationForm onOpenChange={onOpenChange} />
       </DialogContent>
     </Dialog>
   );
