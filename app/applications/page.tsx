@@ -13,6 +13,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import AddApplicationDialog from "@/components/applications/add-application-dialog";
+import TopBar from "@/components/applications/top-bar";
 
 const cards = [
   {
@@ -43,35 +44,8 @@ function ApplicationsPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {cards.map((card, index) => (
-              <div
-                key={index}
-                className="bg-white overflow-hidden shadow rounded-lg"
-              >
-                <div className="p-5">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="bg-indigo-100 rounded-md p-3">
-                        {card.icon}
-                      </div>
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
-                          {card.title}
-                        </dt>
-                        <dd className="text-3xl font-semibold text-gray-900">
-                          {card.value}
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="px-4 sm:px-0">
+          <TopBar cards={cards} username="John Doe" />
 
           <div className="mt-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
             <AddApplicationDialog
