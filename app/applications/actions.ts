@@ -22,6 +22,24 @@ export async function createApplication(formData: FormData) {
   }
 }
 
+export async function deleteApplication(
+  applicationId: string,
+  clerkUserId: string | undefined
+) {
+  try {
+    await connectMongo();
+
+    const mongoUser = await findUserByClerkId(clerkUserId);
+
+    await Application.findByIdAndDelete({
+      _id: applicationId,
+      userId: mongoUser._id,
+    });
+  } catch (error) {
+    console.error("Error deleting application:", error);
+  }
+}
+
 export async function getApplications(clerkUserId: string | undefined) {
   try {
     await connectMongo();

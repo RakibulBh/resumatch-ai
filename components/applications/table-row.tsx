@@ -1,8 +1,26 @@
+"use client";
 import React from "react";
-import { FilePenLine, StickyNote } from "lucide-react";
+import { FilePenLine, StickyNote, Trash2 } from "lucide-react";
 import { convertDateFormat } from "@/lib/utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@clerk/nextjs";
+import { deleteApplication } from "@/app/applications/actions";
 
 const TableRow = ({ application }: { application: any }) => {
+  const queryClient = useQueryClient();
+  const { user } = useUser();
+
+  const { data, mutateAsync, isPending } = useMutation({
+    mutationFn: (applicationId: string) =>
+      deleteApplication(applicationId, user?.id),
+    onError: (error) => {
+      return alert(error.message || "Failed to update");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    },
+  });
+
   return (
     <tr className="border-b border-gray-200 hover:bg-indigo-50 transition-colors duration-200">
       <td className="py-4 px-6 whitespace-nowrap">{application.companyName}</td>
@@ -18,10 +36,13 @@ const TableRow = ({ application }: { application: any }) => {
       <td className="py-4 px-6 whitespace-nowrap">
         <div className="flex gap-x-3">
           <button className="text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
-            <StickyNote size={20} />
-          </button>
-          <button className="text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
             <FilePenLine size={20} />
+          </button>
+          <button
+            onClick={() => mutateAsync(application.id)}
+            className="text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
+          >
+            <Trash2 size={20} />
           </button>
         </div>
       </td>
