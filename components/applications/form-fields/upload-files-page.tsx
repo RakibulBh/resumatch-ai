@@ -10,7 +10,7 @@ import {
 import { FileText } from "lucide-react";
 import React from "react";
 import { Control } from "react-hook-form";
-import { FileInput } from "./form-fields/file-input";
+import { FileInput } from "./file-input";
 
 interface UploadsProps {
   control: Control<any>;

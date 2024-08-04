@@ -71,12 +71,8 @@ export async function createApplication(formData: FormData) {
     const values: any = {};
 
     formData.forEach((value, key) => {
-      if (value !== "") {
-        values[key] = value;
-      }
+      values[key] = value;
     });
-
-    console.log("values:", values);
 
     await Application.create(values);
   } catch (error) {

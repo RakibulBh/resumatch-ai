@@ -18,7 +18,7 @@ export const BasicJobInfo = (form: any) => {
           <FormItem>
             <FormLabel className="flex items-center text-sm font-medium text-gray-700">
               <Briefcase className="mr-2 h-4 w-4" />
-              Job Title
+              Job Title <span className="ml-1 text-red-500">*</span>
             </FormLabel>
             <FormControl>
               <Input
@@ -39,7 +39,7 @@ export const BasicJobInfo = (form: any) => {
           <FormItem>
             <FormLabel className="flex items-center text-sm font-medium text-gray-700">
               <Building2 className="mr-2 h-4 w-4" />
-              Company Name
+              Company Name <span className="ml-1 text-red-500">*</span>
             </FormLabel>
             <FormControl>
               <Input
@@ -60,7 +60,7 @@ export const BasicJobInfo = (form: any) => {
           <FormItem>
             <FormLabel className="flex items-center text-sm font-medium text-gray-700">
               <MapPin className="mr-2 h-4 w-4" />
-              Job Location
+              Job Location <span className="ml-1 text-red-500">*</span>
             </FormLabel>
             <FormControl>
               <Input

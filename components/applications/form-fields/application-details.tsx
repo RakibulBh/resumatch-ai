@@ -48,7 +48,7 @@ export const ApplicationDetails = (form: any) => {
           <FormItem>
             <FormLabel className="flex items-center text-sm font-medium text-gray-700">
               <Briefcase className="mr-2 h-4 w-4" />
-              Job Type
+              Job Type <span className="ml-1 text-red-500">*</span>
             </FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
@@ -61,6 +61,19 @@ export const ApplicationDetails = (form: any) => {
                 <SelectItem value="part-time">Part-time</SelectItem>
                 <SelectItem value="contract">Contract</SelectItem>
                 <SelectItem value="internship">Internship</SelectItem>
+                <SelectItem value="temporary">Temporary</SelectItem>
+                <SelectItem value="freelance">Freelance</SelectItem>
+                <SelectItem value="remote">Remote</SelectItem>
+                <SelectItem value="consultant">Consultant</SelectItem>
+                <SelectItem value="permanent">Permanent</SelectItem>
+                <SelectItem value="seasonal">Seasonal</SelectItem>
+                <SelectItem value="volunteer">Volunteer</SelectItem>
+                <SelectItem value="deg-apprenticeship">
+                  Apprenticeship (Dergee)
+                </SelectItem>
+                <SelectItem value="apprenticeship">
+                  Apprenticeship (Non-Dergee)
+                </SelectItem>
               </SelectContent>
             </Select>
             <FormMessage className="text-xs text-red-500 mt-1" />
@@ -75,7 +88,7 @@ export const ApplicationDetails = (form: any) => {
           <FormItem>
             <FormLabel className="flex items-center text-sm font-medium text-gray-700">
               <Calendar className="mr-2 h-4 w-4" />
-              Application Date
+              Application Date <span className="ml-1 text-red-500">*</span>
             </FormLabel>
             <FormControl>
               <Input
@@ -96,7 +109,7 @@ export const ApplicationDetails = (form: any) => {
           <FormItem>
             <FormLabel className="flex items-center text-sm font-medium text-gray-700">
               <Activity className="mr-2 h-4 w-4" />
-              Application Status
+              Application Status <span className="ml-1 text-red-500">*</span>
             </FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
@@ -109,6 +122,13 @@ export const ApplicationDetails = (form: any) => {
                 <SelectItem value="interviewing">Interviewing</SelectItem>
                 <SelectItem value="offer">Offer Received</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="phone-screen">Phone Screen</SelectItem>
+                <SelectItem value="assessment">Assessment</SelectItem>
+                <SelectItem value="final-interview">Final Interview</SelectItem>
+                <SelectItem value="hired">Hired</SelectItem>
+                <SelectItem value="on-hold">On Hold</SelectItem>
+                <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                <SelectItem value="not-interested">Not Interested</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage className="text-xs text-red-500 mt-1" />

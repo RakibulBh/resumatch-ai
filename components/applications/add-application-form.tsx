@@ -9,7 +9,6 @@ import { createApplication, getSignedURL } from "@/app/applications/actions";
 import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
 import { findUserByClerkId } from "@/app/actions";
-import { Uploads } from "./upload-files-page";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BasicJobInfo } from "./form-fields/basic-job-info";
 import { ApplicationDetails } from "./form-fields/application-details";
@@ -17,6 +16,65 @@ import { AdditionalInformation } from "./form-fields/additional-information";
 import { Form } from "../ui/form";
 import { referralInfo } from "./form-fields/referral-info";
 import { computeSHA256 } from "@/utils/computeHash";
+import { Uploads } from "./form-fields/upload-files-page";
+
+function getCurrentDate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+const stepSchemas = [
+  // Step 1: Basic Job Info
+  z.object({
+    jobTitle: z
+      .string()
+      .min(2, { message: "Job Title must be at least 2 characters long" }),
+    companyName: z
+      .string()
+      .min(2, { message: "Company Name must be at least 2 characters long" }),
+    jobLocation: z
+      .string()
+      .min(2, { message: "Job Location must be at least 2 characters long" }),
+  }),
+
+  // Step 2: Application Details
+  z.object({
+    jobDescription: z.string().optional(),
+    jobType: z.string(),
+    applicationDate: z.string(),
+    applicationStatus: z.string(),
+    applicationLink: z.string().optional(),
+  }),
+
+  // Step 3: Additional Information
+  z.object({
+    applicationNotes: z.string().optional(),
+    jobReferenceNumber: z.string().optional(),
+    applicationDeadline: z.string().optional(),
+  }),
+
+  // Step 4: Uploads
+  z.object({
+    resume: z
+      .custom()
+      .refine((file) => file instanceof File, "Please upload a PDF Document")
+      .optional(),
+    coverLetter: z
+      .custom()
+      .refine((file) => file instanceof File, "Please upload a PDF Document")
+      .optional(),
+  }),
+
+  // Step 5: Referral Info
+  z.object({
+    referral: z.boolean(),
+    referralSource: z.string().optional(),
+    referralContact: z.string().optional(),
+  }),
+];
 
 const formSchema = z.object({
   jobTitle: z
@@ -51,58 +109,6 @@ const formSchema = z.object({
   referralContact: z.string().optional(),
 });
 
-const stepSchemas = [
-  // Step 1: Basic Job Info
-  z.object({
-    jobTitle: z
-      .string()
-      .min(2, { message: "Job Title must be at least 2 characters long" }),
-    companyName: z
-      .string()
-      .min(2, { message: "Company Name must be at least 2 characters long" }),
-    jobLocation: z
-      .string()
-      .min(2, { message: "Job Location must be at least 2 characters long" }),
-  }),
-
-  // Step 2: Application Details
-  z.object({
-    jobDescription: z.string().min(5, {
-      message: "Job Description must be at least 5 characters long",
-    }),
-    jobType: z.string(),
-    applicationDate: z.string(),
-    applicationStatus: z.string(),
-    applicationLink: z.string().optional(),
-  }),
-
-  // Step 3: Additional Information
-  z.object({
-    applicationNotes: z.string().optional(),
-    jobReferenceNumber: z.string().optional(),
-    applicationDeadline: z.string().optional(),
-  }),
-
-  // Step 4: Uploads
-  z.object({
-    resume: z
-      .custom()
-      .refine((file) => file instanceof File, "Please upload a PDF Document")
-      .optional(),
-    coverLetter: z
-      .custom()
-      .refine((file) => file instanceof File, "Please upload a PDF Document")
-      .optional(),
-  }),
-
-  // Step 5: Referral Info
-  z.object({
-    referral: z.boolean(),
-    referralSource: z.string().optional(),
-    referralContact: z.string().optional(),
-  }),
-];
-
 type FormValues = z.infer<typeof formSchema>;
 
 export const AddApplicationForm = ({
@@ -125,16 +131,50 @@ export const AddApplicationForm = ({
     },
   });
 
+  // Helper function for file uploads
+  const uploadFile = async (
+    formData: FormData,
+    file: any,
+    fileType: "resume" | "coverLetter"
+  ) => {
+    if (!file) return;
+
+    const signedUrl = await getSignedURL({
+      clerkUserId: user?.id,
+      type: file.type,
+      size: file.size,
+      checksum: await computeSHA256(file),
+    });
+
+    if (signedUrl.error) {
+      console.error(
+        `Error getting signed URL for ${fileType}:`,
+        signedUrl.error
+      );
+      return;
+    }
+
+    const url = signedUrl.success?.url;
+
+    await fetch(url, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type },
+    });
+
+    formData.append(fileType, url.split("?")[0]);
+  };
+
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(stepSchemas[currentStep]),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       jobTitle: "",
       companyName: "",
       jobLocation: "",
       jobDescription: "",
       jobType: "part-time",
-      applicationDate: "",
+      applicationDate: getCurrentDate(),
       applicationStatus: "applied",
       applicationLink: "",
       applicationNotes: "",
@@ -152,13 +192,13 @@ export const AddApplicationForm = ({
   async function onSubmit(values: FormValues) {
     const isValid = await form.trigger();
     if (!isValid) {
-      // Find the first step with validation errors
       for (let i = 0; i < stepSchemas.length; i++) {
         const stepIsValid = await form.trigger(
           Object.keys(stepSchemas[i].shape) as any
         );
         if (!stepIsValid) {
           setCurrentStep(i);
+          console.log("Form validation failed");
           return;
         }
       }
@@ -171,43 +211,13 @@ export const AddApplicationForm = ({
 
     const fileUploads = [];
 
-    // Helper function for file uploads
-    const uploadFile = async (
-      file: any,
-      fileType: "resume" | "coverLetter"
-    ) => {
-      if (!file) return;
-
-      const signedUrl = await getSignedURL({
-        clerkUserId: user?.id,
-        type: file.type,
-        size: file.size,
-        checksum: await computeSHA256(file),
-      });
-
-      if (signedUrl.error) {
-        console.error(
-          `Error getting signed URL for ${fileType}:`,
-          signedUrl.error
-        );
-        return;
-      }
-
-      const url = signedUrl.success?.url;
-
-      await fetch(url, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-
-      formData.append(fileType, url.split("?")[0]);
-    };
-
     // Queue file uploads
-    if (values.resume) fileUploads.push(uploadFile(values.resume, "resume"));
+
+    if (values.resume) {
+      fileUploads.push(uploadFile(formData, values.resume, "resume"));
+    }
     if (values.coverLetter)
-      fileUploads.push(uploadFile(values.coverLetter, "coverLetter"));
+      fileUploads.push(uploadFile(formData, values.coverLetter, "coverLetter"));
 
     try {
       // Run file uploads concurrently
@@ -216,10 +226,7 @@ export const AddApplicationForm = ({
       // Append other form values
       Object.entries(values).forEach(([key, value]) => {
         if (value != null && !["resume", "coverLetter"].includes(key)) {
-          formData.append(
-            key,
-            value instanceof File ? value : value.toString()
-          );
+          formData.append(key, value.toString());
         }
       });
 
@@ -231,7 +238,8 @@ export const AddApplicationForm = ({
   }
 
   const handleNextStep = async () => {
-    const isValid = await form.trigger();
+    const currentStepFields = Object.keys(stepSchemas[currentStep].shape);
+    const isValid = await form.trigger(currentStepFields as any);
     if (isValid) {
       setCurrentStep((prev) => prev + 1);
     }
