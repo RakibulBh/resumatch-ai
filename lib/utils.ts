@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function convertDateFormat(dateStr: string) {
+export function convertDateFormat(dateStr: Date) {
   // Parse the input date string to a Date object
   const date = new Date(dateStr);
 

@@ -1,5 +1,6 @@
 import { model, models, Schema } from "mongoose";
 export interface IApplication {
+  id: string;
   userId: Object;
   jobTitle: string;
   companyName: string;

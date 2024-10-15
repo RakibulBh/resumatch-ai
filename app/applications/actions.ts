@@ -6,8 +6,8 @@ import { findUserByClerkId } from "../actions";
 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-
 import crypto from "crypto";
+
 const generateFileName = (bytes = 32) =>
   crypto.randomBytes(bytes).toString("hex");
 
@@ -109,5 +109,30 @@ export async function getApplications(clerkUserId: string | undefined) {
     return JSON.parse(JSON.stringify(applications));
   } catch (e) {
     console.error("Error getting applications:", e);
+  }
+}
+
+export async function updateApplication(
+  clerkUserId: string | undefined,
+  applicationId: string,
+  values: any
+) {
+  try {
+    await connectMongo();
+
+    const mongoUser = await findUserByClerkId(clerkUserId);
+
+    console.log(values);
+
+    // await Application.findOneAndUpdate(
+    //   { _id: applicationId, userId: mongoUser?._id },
+    //   values,
+    //   { new: true }
+    // );
+
+    return { success: true };
+  } catch (e) {
+    console.error("Error updating application:", e);
+    return { error: e };
   }
 }

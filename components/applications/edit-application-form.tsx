@@ -17,6 +17,7 @@ import { Form } from "../ui/form";
 import { referralInfo } from "./form-fields/referral-info";
 import { computeSHA256 } from "@/utils/computeHash";
 import { Uploads } from "./form-fields/upload-files-page";
+import { IApplication } from "@/models/application";
 
 function getCurrentDate() {
   const now = new Date();
@@ -111,10 +112,10 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export const AddApplicationForm = ({
-  onOpenChange,
+export const EditApplicationForm = ({
+  application,
 }: {
-  onOpenChange: (state: boolean) => void;
+  application: IApplication;
 }) => {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
@@ -127,7 +128,6 @@ export const AddApplicationForm = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
-      onOpenChange(false);
     },
   });
 

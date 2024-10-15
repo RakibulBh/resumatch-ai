@@ -15,7 +15,7 @@ import {
 import AddApplicationDialog from "@/components/applications/add-application-dialog";
 import TopBar from "@/components/applications/top-bar";
 
-function ApplicationsPage() {
+function Applications() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
@@ -56,4 +56,4 @@ function ApplicationsPage() {
   );
 }
 
-export default ApplicationsPage;
+export default Applications;

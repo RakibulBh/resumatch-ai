@@ -12,8 +12,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const tableCols = [
   { title: "Company", id: "company" },
   { title: "Position", id: "position" },
+  { title: "Job Type", id: "jobType" },
   { title: "Status", id: "status" },
   { title: "Application Date", id: "applicationDate" },
+  { title: "Deadline", id: "applicationDeadline" },
   { title: "Actions", id: "actions" },
 ];
 

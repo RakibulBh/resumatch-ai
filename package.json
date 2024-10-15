@@ -12,6 +12,7 @@
     "@aws-sdk/client-s3": "^3.623.0",
     "@aws-sdk/s3-request-presigner": "^3.623.0",
     "@clerk/nextjs": "^5.2.8",
+    "@google/generative-ai": "^0.21.0",
     "@hookform/resolvers": "^3.6.0",
     "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-label": "^2.0.2",
